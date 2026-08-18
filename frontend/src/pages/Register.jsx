@@ -1,115 +1,135 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    full_name: '',
+    name: '',
     email: '',
+    phone: '',
     password: '',
-    phone: ''
+    confirmPassword: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
   const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    setError('');
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-    
-    setLoading(true);
     setError('');
 
+    if (formData.password !== formData.confirmPassword) {
+      setError('Пароли не совпадают');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Пароль должен быть не менее 6 символов');
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const response = await register(formData);
-      if (response.success) {
-        navigate('/');
-      } else {
-        setError(response.message || 'Registration failed');
-      }
+      await register({
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password
+      });
+      navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred');
+      setError(err.response?.data?.error || 'Ошибка регистрации');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-box">
-        <h2>Register</h2>
+    <div className="auth-page">
+      <div className="auth-container">
+        <h2>Регистрация</h2>
         
         {error && <div className="error-message">{error}</div>}
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label>Full Name</label>
+            <label htmlFor="name">Имя</label>
             <input
               type="text"
-              name="full_name"
-              value={formData.full_name}
+              id="name"
+              name="name"
+              value={formData.name}
               onChange={handleChange}
               required
-              placeholder="Enter your full name"
+              placeholder="Ваше имя"
             />
           </div>
           
           <div className="form-group">
-            <label>Email</label>
+            <label htmlFor="email">Email</label>
             <input
               type="email"
+              id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
               required
-              placeholder="Enter your email"
+              placeholder="example@mail.com"
             />
           </div>
           
           <div className="form-group">
-            <label>Phone (optional)</label>
+            <label htmlFor="phone">Телефон</label>
             <input
               type="tel"
+              id="phone"
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              placeholder="Enter your phone number"
+              placeholder="+7 (999) 123-45-67"
             />
           </div>
           
           <div className="form-group">
-            <label>Password</label>
+            <label htmlFor="password">Пароль</label>
             <input
               type="password"
+              id="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               required
-              placeholder="Create a password (min 6 characters)"
+              minLength={6}
             />
           </div>
           
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Registering...' : 'Register'}
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Подтвердите пароль</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          
+          <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+            {loading ? 'Регистрация...' : 'Зарегистрироваться'}
           </button>
         </form>
         
-        <div className="auth-link">
-          Already have an account? <Link to="/login">Login here</Link>
-        </div>
+        <p className="auth-switch">
+          Уже есть аккаунт? <Link to="/login">Войти</Link>
+        </p>
       </div>
     </div>
   );

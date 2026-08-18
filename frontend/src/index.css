@@ -1,0 +1,791 @@
+/* Reset and Base Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --primary-color: #c9a55c;
+  --primary-dark: #b8934a;
+  --secondary-color: #1a1a1a;
+  --text-color: #333;
+  --text-light: #666;
+  --bg-light: #f5f5f5;
+  --white: #ffffff;
+  --border-color: #e0e0e0;
+  --success-color: #28a745;
+  --danger-color: #dc3545;
+  --warning-color: #ffc107;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  line-height: 1.6;
+  color: var(--text-color);
+  background-color: var(--white);
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Header */
+.header {
+  background: var(--secondary-color);
+  padding: 15px 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--white);
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.logo-icon {
+  font-size: 2rem;
+}
+
+.nav {
+  display: flex;
+  gap: 25px;
+}
+
+.nav-link {
+  color: var(--white);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.nav-link:hover {
+  color: var(--primary-color);
+}
+
+.auth-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-outline:hover {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+.btn-small {
+  padding: 5px 10px;
+  font-size: 0.875rem;
+}
+
+.btn-large {
+  padding: 15px 30px;
+  font-size: 1.1rem;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-danger {
+  background: var(--danger-color);
+  color: var(--white);
+}
+
+/* Hero Section */
+.hero {
+  background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('/hero-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  min-height: 500px;
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: var(--white);
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.hero-content p {
+  font-size: 1.2rem;
+  margin-bottom: 30px;
+}
+
+/* Sections */
+.section {
+  padding: 80px 0;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 50px;
+  color: var(--secondary-color);
+}
+
+/* Services Grid */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.service-card {
+  background: var(--bg-light);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.3s;
+}
+
+.service-card:hover {
+  transform: translateY(-5px);
+}
+
+.service-image {
+  height: 200px;
+  background: var(--secondary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-placeholder {
+  font-size: 4rem;
+}
+
+.service-info {
+  padding: 20px;
+}
+
+.service-info h3 {
+  margin-bottom: 10px;
+}
+
+.service-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+/* Barbers Grid */
+.barbers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+}
+
+.barber-card {
+  background: var(--bg-light);
+  border-radius: 10px;
+  overflow: hidden;
+  text-align: center;
+  transition: transform 0.3s;
+}
+
+.barber-card:hover {
+  transform: translateY(-5px);
+}
+
+.barber-image {
+  height: 250px;
+  background: var(--secondary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.barber-placeholder {
+  font-size: 6rem;
+}
+
+.barber-info {
+  padding: 20px;
+}
+
+.barber-meta {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 10px 0;
+  color: var(--text-light);
+}
+
+/* Reviews */
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 30px;
+}
+
+.review-card {
+  background: var(--bg-light);
+  padding: 25px;
+  border-radius: 10px;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.review-author {
+  font-weight: bold;
+}
+
+.review-comment {
+  color: var(--text-light);
+  margin-bottom: 10px;
+}
+
+.review-barber {
+  font-size: 0.9rem;
+  color: var(--primary-color);
+}
+
+/* CTA Section */
+.cta {
+  background: var(--secondary-color);
+  color: var(--white);
+  text-align: center;
+}
+
+.cta h2 {
+  margin-bottom: 20px;
+}
+
+/* Footer */
+.footer {
+  background: var(--secondary-color);
+  color: var(--white);
+  padding: 50px 0 20px;
+}
+
+.footer-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 40px;
+  margin-bottom: 30px;
+}
+
+.footer-section h3, .footer-section h4 {
+  margin-bottom: 20px;
+}
+
+.footer-section a {
+  color: var(--white);
+  text-decoration: none;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.social-links {
+  display: flex;
+  gap: 15px;
+  font-size: 1.5rem;
+}
+
+.footer-bottom {
+  text-align: center;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Auth Pages */
+.auth-page {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 50px 20px;
+}
+
+.auth-container {
+  max-width: 450px;
+  width: 100%;
+  background: var(--bg-light);
+  padding: 40px;
+  border-radius: 10px;
+}
+
+.auth-container h2 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-group input, .form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.form-group textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.error-message {
+  background: #ffe6e6;
+  color: var(--danger-color);
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.auth-switch {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.demo-credentials {
+  margin-top: 30px;
+  padding: 15px;
+  background: rgba(201, 165, 92, 0.1);
+  border-radius: 5px;
+  font-size: 0.9rem;
+}
+
+/* Booking Page */
+.booking-page {
+  padding: 50px 0;
+}
+
+.booking-page h2 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.booking-progress {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.progress-step {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--bg-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.progress-step.active {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+.booking-step {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.booking-step h3 {
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.services-list, .barbers-list {
+  display: grid;
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.service-option, .barber-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: var(--bg-light);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s;
+  border: 2px solid transparent;
+}
+
+.service-option:hover, .barber-option:hover {
+  border-color: var(--primary-color);
+}
+
+.service-option.selected, .barber-option.selected {
+  border-color: var(--primary-color);
+  background: rgba(201, 165, 92, 0.1);
+}
+
+.barber-option-avatar {
+  font-size: 3rem;
+  margin-right: 15px;
+}
+
+.barber-option-info {
+  flex: 1;
+}
+
+.time-slots {
+  margin-top: 20px;
+}
+
+.slots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.time-slot {
+  padding: 10px;
+  background: var(--bg-light);
+  border: 2px solid var(--border-color);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.time-slot:hover {
+  border-color: var(--primary-color);
+}
+
+.time-slot.selected {
+  background: var(--primary-color);
+  color: var(--white);
+  border-color: var(--primary-color);
+}
+
+.booking-summary {
+  background: var(--bg-light);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 25px;
+}
+
+.summary-item {
+  margin-bottom: 10px;
+}
+
+.booking-success {
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.success-icon {
+  font-size: 5rem;
+  margin-bottom: 20px;
+}
+
+.booking-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 25px;
+}
+
+/* Profile Page */
+.profile-page {
+  padding: 50px 0;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+}
+
+.profile-card, .appointments-card {
+  background: var(--bg-light);
+  padding: 30px;
+  border-radius: 10px;
+}
+
+.profile-card h3, .appointments-card h3 {
+  margin-bottom: 20px;
+}
+
+.filter-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.filter-tabs button {
+  padding: 8px 16px;
+  border: none;
+  background: var(--white);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.filter-tabs button.active {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+.appointment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: var(--white);
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+}
+
+.status-pending { background: var(--warning-color); color: #000; }
+.status-confirmed { background: var(--success-color); color: var(--white); }
+.status-completed { background: var(--secondary-color); color: var(--white); }
+.status-cancelled { background: var(--danger-color); color: var(--white); }
+
+/* Admin Dashboard */
+.admin-dashboard {
+  padding: 50px 0;
+}
+
+.admin-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.admin-tabs button {
+  padding: 12px 24px;
+  border: none;
+  background: var(--bg-light);
+  cursor: pointer;
+  font-size: 1rem;
+  border-radius: 5px;
+}
+
+.admin-tabs button.active {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.stat-card {
+  background: var(--bg-light);
+  padding: 25px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.stat-card h3 {
+  font-size: 2rem;
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+.stat-card.highlight {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+.stat-card.highlight h3 {
+  color: var(--white);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--white);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.data-table th, .data-table td {
+  padding: 15px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.data-table th {
+  background: var(--secondary-color);
+  color: var(--white);
+}
+
+.status-select {
+  padding: 5px 10px;
+  border-radius: 5px;
+  border: 1px solid var(--border-color);
+}
+
+.export-section {
+  margin-bottom: 40px;
+}
+
+.export-section button {
+  margin-right: 15px;
+  margin-bottom: 10px;
+}
+
+/* Barber Profile */
+.barber-profile-page {
+  padding: 50px 0;
+}
+
+.barber-profile-header {
+  display: flex;
+  gap: 40px;
+  align-items: center;
+  margin-bottom: 40px;
+  padding: 30px;
+  background: var(--bg-light);
+  border-radius: 10px;
+}
+
+.barber-avatar {
+  font-size: 8rem;
+}
+
+.barber-stats {
+  display: flex;
+  gap: 30px;
+  margin-top: 15px;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.schedule-day {
+  padding: 15px;
+  background: var(--bg-light);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.schedule-day.day-off {
+  opacity: 0.6;
+}
+
+.day-name {
+  font-weight: bold;
+}
+
+.review-item {
+  padding: 20px;
+  background: var(--bg-light);
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.review-date {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 100px 20px;
+  font-size: 1.2rem;
+  color: var(--text-light);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nav {
+    display: none;
+  }
+  
+  .hero-content h1 {
+    font-size: 2rem;
+  }
+  
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .barber-profile-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .barber-stats {
+    justify-content: center;
+  }
+  
+  .booking-nav {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .booking-nav button {
+    width: 100%;
+  }
+}

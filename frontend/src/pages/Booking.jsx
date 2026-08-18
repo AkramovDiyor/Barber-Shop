@@ -1,345 +1,319 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { serviceService, barberService, appointmentService } from '../services';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const Booking = () => {
-  const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  
-  const [services, setServices] = useState([]);
-  const [barbers, setBarbers] = useState([]);
-  const [selectedService, setSelectedService] = useState(null);
-  const [selectedBarber, setSelectedBarber] = useState(null);
-  const [selectedDate, setSelectedDate] = useState('');
-  const [selectedTime, setSelectedTime] = useState('');
-  const [availableTimes, setAvailableTimes] = useState([]);
-  
-  const [formData, setFormData] = useState({
-    notes: ''
-  });
-  
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  const [step, setStep] = useState(1);
+  const [services, setServices] = useState([]);
+  const [barbers, setBarbers] = useState([]);
+  const [formData, setFormData] = useState({
+    serviceId: '',
+    barberId: '',
+    date: '',
+    time: '',
+    name: '',
+    phone: '',
+    notes: ''
+  });
+  const [selectedService, setSelectedService] = useState(null);
+  const [selectedBarber, setSelectedBarber] = useState(null);
+  const [availableTimes, setAvailableTimes] = useState([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [servicesRes, barbersRes] = await Promise.all([
+          api.get('/services'),
+          api.get('/barbers')
+        ]);
+        setServices(servicesRes.data);
+        setBarbers(barbersRes.data);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleServiceSelect = (service) => {
+    setSelectedService(service);
+    setFormData({ ...formData, serviceId: service.id });
+  };
+
+  const handleBarberSelect = (barber) => {
+    setSelectedBarber(barber);
+    setFormData({ ...formData, barberId: barber.id });
+  };
+
+  const checkAvailability = async () => {
+    if (!formData.date || !selectedBarber) return;
+    
+    try {
+      // Generate time slots based on barber schedule and service duration
+      const times = [];
+      const startHour = 10;
+      const endHour = 22;
+      
+      for (let hour = startHour; hour < endHour; hour++) {
+        for (let min of ['00', '30']) {
+          const time = `${hour.toString().padStart(2, '0')}:${min}`;
+          
+          const response = await api.post('/appointments/check-availability', {
+            barberId: selectedBarber.id,
+            date: formData.date,
+            time,
+            duration: selectedService.duration
+          });
+          
+          if (response.data.available) {
+            times.push(time);
+          }
+        }
+      }
+      setAvailableTimes(times);
+    } catch (error) {
+      console.error('Error checking availability:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (formData.date && selectedBarber && selectedService) {
+      checkAvailability();
+    }
+  }, [formData.date]);
+
+  const handleSubmit = async () => {
     if (!isAuthenticated) {
       navigate('/login');
       return;
     }
-    loadData();
-  }, []);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const [servicesRes, barbersRes] = await Promise.all([
-        serviceService.getAll(),
-        barberService.getAll()
-      ]);
-      
-      if (servicesRes.success) {
-        setServices(servicesRes.data.services);
-      }
-      if (barbersRes.success) {
-        setBarbers(barbersRes.data.barbers);
-      }
-    } catch (err) {
-      setError('Failed to load data');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDateChange = async (date) => {
-    setSelectedDate(date);
-    setSelectedTime('');
-    
-    if (selectedBarber && selectedService) {
-      try {
-        // Generate time slots based on service duration
-        const startHour = 9;
-        const endHour = 21;
-        const duration = selectedService.duration_minutes;
-        const times = [];
-        
-        for (let hour = startHour; hour < endHour; hour++) {
-          for (let minute = 0; minute < 60; minute += 30) {
-            const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-            const endTime = calculateEndTime(timeStr, duration);
-            
-            // Check availability
-            try {
-              const availRes = await barberService.checkAvailability(
-                selectedBarber.id,
-                date,
-                timeStr,
-                endTime
-              );
-              if (availRes.data.isAvailable) {
-                times.push(timeStr);
-              }
-            } catch (e) {
-              // Slot not available
-            }
-          }
-        }
-        
-        setAvailableTimes(times);
-      } catch (err) {
-        console.error('Error checking availability:', err);
-      }
-    }
-  };
-
-  const calculateEndTime = (startTime, durationMinutes) => {
-    const [hours, minutes] = startTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + durationMinutes;
-    const endHours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
-    const endMinutes = String(totalMinutes % 60).padStart(2, '0');
-    return `${endHours}:${endMinutes}`;
-  };
-
-  const handleSubmit = async () => {
-    if (!selectedService || !selectedBarber || !selectedDate || !selectedTime) {
-      setError('Please complete all steps');
-      return;
-    }
+    setLoading(true);
+    setError('');
 
     try {
-      setLoading(true);
-      const response = await appointmentService.create({
-        service_id: selectedService.id,
-        barber_id: selectedBarber.id,
-        appointment_date: selectedDate,
-        start_time: selectedTime,
+      await api.post('/appointments', {
+        serviceId: formData.serviceId,
+        barberId: formData.barberId,
+        date: formData.date,
+        time: formData.time,
+        name: formData.name,
+        phone: formData.phone,
         notes: formData.notes
       });
-
-      if (response.success) {
-        setSuccess('Appointment booked successfully!');
-        setTimeout(() => {
-          navigate('/profile');
-        }, 2000);
-      }
+      setStep(5); // Success step
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to book appointment');
+      setError(err.response?.data?.error || 'Ошибка при создании записи');
     } finally {
       setLoading(false);
     }
   };
 
-  const nextStep = () => {
-    if (step === 1 && !selectedService) {
-      setError('Please select a service');
-      return;
-    }
-    if (step === 2 && !selectedBarber) {
-      setError('Please select a barber');
-      return;
-    }
-    if (step === 3 && (!selectedDate || !selectedTime)) {
-      setError('Please select date and time');
-      return;
-    }
-    setError('');
-    setStep(step + 1);
-  };
+  const renderStep1 = () => (
+    <div className="booking-step">
+      <h3>Выберите услугу</h3>
+      <div className="services-list">
+        {services.map(service => (
+          <div
+            key={service.id}
+            className={`service-option ${selectedService?.id === service.id ? 'selected' : ''}`}
+            onClick={() => handleServiceSelect(service)}
+          >
+            <div className="service-option-info">
+              <h4>{service.name}</h4>
+              <p>{service.description}</p>
+              <span className="duration">⏱️ {service.duration} мин</span>
+            </div>
+            <span className="price">{service.price} ₽</span>
+          </div>
+        ))}
+      </div>
+      <button
+        className="btn btn-primary"
+        disabled={!selectedService}
+        onClick={() => setStep(2)}
+      >
+        Далее
+      </button>
+    </div>
+  );
 
-  const prevStep = () => {
-    setError('');
-    setStep(step - 1);
-  };
+  const renderStep2 = () => (
+    <div className="booking-step">
+      <h3>Выберите барбера</h3>
+      <div className="barbers-list">
+        {barbers.map(barber => (
+          <div
+            key={barber.id}
+            className={`barber-option ${selectedBarber?.id === barber.id ? 'selected' : ''}`}
+            onClick={() => handleBarberSelect(barber)}
+          >
+            <div className="barber-option-avatar">👨‍🦱</div>
+            <div className="barber-option-info">
+              <h4>{barber.name}</h4>
+              <p>{barber.specialization}</p>
+              <span className="rating">⭐ {barber.rating}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="booking-nav">
+        <button className="btn btn-outline" onClick={() => setStep(1)}>Назад</button>
+        <button className="btn btn-primary" disabled={!selectedBarber} onClick={() => setStep(3)}>
+          Далее
+        </button>
+      </div>
+    </div>
+  );
 
-  if (loading && services.length === 0) {
-    return (
-      <div className="booking-container">
-        <div className="loading">
-          <div className="spinner"></div>
+  const renderStep3 = () => (
+    <div className="booking-step">
+      <h3>Выберите дату и время</h3>
+      <div className="datetime-picker">
+        <div className="form-group">
+          <label>Дата</label>
+          <input
+            type="date"
+            value={formData.date}
+            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+            min={new Date().toISOString().split('T')[0]}
+          />
+        </div>
+        
+        {formData.date && availableTimes.length > 0 && (
+          <div className="time-slots">
+            <label>Доступное время</label>
+            <div className="slots-grid">
+              {availableTimes.map(time => (
+                <button
+                  key={time}
+                  className={`time-slot ${formData.time === time ? 'selected' : ''}`}
+                  onClick={() => setFormData({ ...formData, time })}
+                >
+                  {time}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {formData.date && availableTimes.length === 0 && (
+          <p className="no-times">Нет доступного времени на эту дату</p>
+        )}
+      </div>
+      <div className="booking-nav">
+        <button className="btn btn-outline" onClick={() => setStep(2)}>Назад</button>
+        <button
+          className="btn btn-primary"
+          disabled={!formData.date || !formData.time}
+          onClick={() => setStep(4)}
+        >
+          Далее
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderStep4 = () => (
+    <div className="booking-step">
+      <h3>Подтверждение записи</h3>
+      <div className="booking-summary">
+        <div className="summary-item">
+          <strong>Услуга:</strong> {selectedService?.name}
+        </div>
+        <div className="summary-item">
+          <strong>Барбер:</strong> {selectedBarber?.name}
+        </div>
+        <div className="summary-item">
+          <strong>Дата:</strong> {formData.date}
+        </div>
+        <div className="summary-item">
+          <strong>Время:</strong> {formData.time}
+        </div>
+        <div className="summary-item">
+          <strong>Цена:</strong> {selectedService?.price} ₽
         </div>
       </div>
-    );
-  }
+      
+      {error && <div className="error-message">{error}</div>}
+      
+      <div className="form-group">
+        <label>Имя</label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          placeholder="Ваше имя"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>Телефон</label>
+        <input
+          type="tel"
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+          placeholder="+7 (999) 123-45-67"
+        />
+      </div>
+      
+      <div className="form-group">
+        <label>Комментарий (необязательно)</label>
+        <textarea
+          value={formData.notes}
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+          placeholder="Пожелания к стрижке"
+        />
+      </div>
+      
+      <div className="booking-nav">
+        <button className="btn btn-outline" onClick={() => setStep(3)}>Назад</button>
+        <button
+          className="btn btn-primary"
+          onClick={handleSubmit}
+          disabled={loading || !formData.name || !formData.phone}
+        >
+          {loading ? 'Запись...' : 'Подтвердить запись'}
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderStep5 = () => (
+    <div className="booking-step booking-success">
+      <div className="success-icon">✅</div>
+      <h3>Запись успешно создана!</h3>
+      <p>Мы ждем вас {formData.date} в {formData.time}</p>
+      <button className="btn btn-primary" onClick={() => navigate('/profile')}>
+        В личный кабинет
+      </button>
+    </div>
+  );
 
   return (
-    <div className="booking-container">
-      <div className="booking-steps">
-        <div className="step-indicator">
-          <div className={`step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'completed' : ''}`}>
-            <div className="step-number">1</div>
-            <div className="step-label">Service</div>
-          </div>
-          <div className={`step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'completed' : ''}`}>
-            <div className="step-number">2</div>
-            <div className="step-label">Barber</div>
-          </div>
-          <div className={`step ${step >= 3 ? 'active' : ''} ${step > 3 ? 'completed' : ''}`}>
-            <div className="step-number">3</div>
-            <div className="step-label">Date & Time</div>
-          </div>
-          <div className={`step ${step >= 4 ? 'active' : ''}`}>
-            <div className="step-number">4</div>
-            <div className="step-label">Confirm</div>
-          </div>
-        </div>
-
-        {error && <div className="error-message">{error}</div>}
-        {success && <div className="success-message">{success}</div>}
-
-        {/* Step 1: Select Service */}
-        {step === 1 && (
-          <div>
-            <h2>Select Service</h2>
-            {services.map(service => (
-              <div
-                key={service.id}
-                className={`service-card ${selectedService?.id === service.id ? 'selected' : ''}`}
-                onClick={() => setSelectedService(service)}
-              >
-                <h3>{service.name}</h3>
-                <p>{service.description}</p>
-                <p>Duration: {service.duration_minutes} minutes</p>
-                <p className="price">${service.price}</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Step 2: Select Barber */}
-        {step === 2 && (
-          <div>
-            <h2>Select Barber</h2>
-            {barbers.map(barber => (
-              <div
-                key={barber.id}
-                className={`barber-card ${selectedBarber?.id === barber.id ? 'selected' : ''}`}
-                onClick={() => setSelectedBarber(barber)}
-              >
-                <h3>{barber.user?.full_name || 'Barber'}</h3>
-                <p>{barber.specialization || 'Professional Barber'}</p>
-                {barber.rating && (
-                  <p>
-                    Rating: {barber.rating} ★ ({barber.total_reviews || 0} reviews)
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Step 3: Select Date & Time */}
-        {step === 3 && (
-          <div>
-            <h2>Select Date & Time</h2>
-            <div className="form-group">
-              <label>Date</label>
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => handleDateChange(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-              />
+    <div className="booking-page">
+      <div className="container">
+        <h2>Онлайн-запись</h2>
+        
+        <div className="booking-progress">
+          {[1, 2, 3, 4].map(num => (
+            <div key={num} className={`progress-step ${step >= num ? 'active' : ''}`}>
+              <span>{num}</span>
             </div>
-            
-            {selectedDate && (
-              <>
-                <label>Available Times</label>
-                <div className="time-slots">
-                  {availableTimes.length > 0 ? (
-                    availableTimes.map(time => (
-                      <div
-                        key={time}
-                        className={`time-slot ${selectedTime === time ? 'selected' : ''}`}
-                        onClick={() => setSelectedTime(time)}
-                      >
-                        {time}
-                      </div>
-                    ))
-                  ) : (
-                    <p>No available slots for this date</p>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* Step 4: Confirm */}
-        {step === 4 && (
-          <div>
-            <h2>Confirm Booking</h2>
-            <div className="summary-box">
-              <div className="summary-item">
-                <span>Service:</span>
-                <span>{selectedService?.name}</span>
-              </div>
-              <div className="summary-item">
-                <span>Barber:</span>
-                <span>{selectedBarber?.user?.full_name || 'Selected Barber'}</span>
-              </div>
-              <div className="summary-item">
-                <span>Date:</span>
-                <span>{selectedDate}</span>
-              </div>
-              <div className="summary-item">
-                <span>Time:</span>
-                <span>{selectedTime}</span>
-              </div>
-              <div className="summary-item">
-                <span>Duration:</span>
-                <span>{selectedService?.duration_minutes} minutes</span>
-              </div>
-              <div className="summary-item">
-                <span>Price:</span>
-                <span>${selectedService?.price}</span>
-              </div>
-              
-              <div className="form-group" style={{ marginTop: '20px' }}>
-                <label>Notes (optional)</label>
-                <textarea
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Any special requests..."
-                  style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ddd' }}
-                  rows={3}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Navigation Buttons */}
-        <div className="booking-actions">
-          {step > 1 && step < 4 && (
-            <button className="btn-secondary" onClick={prevStep}>
-              Previous
-            </button>
-          )}
-          
-          {step < 3 && (
-            <button className="btn-primary" onClick={nextStep}>
-              Next
-            </button>
-          )}
-          
-          {step === 3 && (
-            <button className="btn-primary" onClick={nextStep}>
-              Review
-            </button>
-          )}
-          
-          {step === 4 && (
-            <button 
-              className="btn-primary" 
-              onClick={handleSubmit}
-              disabled={loading}
-            >
-              {loading ? 'Booking...' : 'Confirm Booking'}
-            </button>
-          )}
+          ))}
         </div>
+        
+        {step === 1 && renderStep1()}
+        {step === 2 && renderStep2()}
+        {step === 3 && renderStep3()}
+        {step === 4 && renderStep4()}
+        {step === 5 && renderStep5()}
       </div>
     </div>
   );

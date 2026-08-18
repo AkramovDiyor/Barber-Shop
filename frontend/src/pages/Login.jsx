@@ -1,83 +1,76 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-    setError('');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    setLoading(true);
 
     try {
-      const response = await login(formData);
-      if (response.success) {
-        navigate('/');
-      } else {
-        setError(response.message || 'Login failed');
-      }
+      await login(email, password);
+      navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'An error occurred');
+      setError(err.response?.data?.error || 'Ошибка входа');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <div className="auth-box">
-        <h2>Login</h2>
+    <div className="auth-page">
+      <div className="auth-container">
+        <h2>Вход</h2>
         
         {error && <div className="error-message">{error}</div>}
         
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label>Email</label>
+            <label htmlFor="email">Email</label>
             <input
               type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="Enter your email"
+              placeholder="admin@barbershop.com"
             />
           </div>
           
           <div className="form-group">
-            <label>Password</label>
+            <label htmlFor="password">Пароль</label>
             <input
               type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
-              placeholder="Enter your password"
+              placeholder="admin123"
             />
           </div>
           
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+          <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
+            {loading ? 'Вход...' : 'Войти'}
           </button>
         </form>
         
-        <div className="auth-link">
-          Don't have an account? <Link to="/register">Register here</Link>
+        <p className="auth-switch">
+          Нет аккаунта? <Link to="/register">Зарегистрироваться</Link>
+        </p>
+        
+        <div className="demo-credentials">
+          <p><strong>Тестовые аккаунты:</strong></p>
+          <p>Админ: admin@barbershop.com / admin123</p>
+          <p>Клиент: user@example.com / user123</p>
         </div>
       </div>
     </div>

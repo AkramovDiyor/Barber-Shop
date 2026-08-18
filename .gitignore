@@ -1,1 +1,34 @@
-(frontend/src/services/index.js is a source file, and there are no build artifacts, dependencies, or temporary files in the changes)
+```
+# Dependencies
+backend/node_modules/
+frontend/node_modules/
+
+# Build artifacts
+backend/dist/
+frontend/dist/
+
+# Environment variables
+backend/.env
+frontend/.env
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Vite cache
+frontend/.vite/
+
+# Package lock files (already in repo but good to ignore variations)
+backend/node_modules/.package-lock.json
+frontend/node_modules/.package-lock.json
+```
