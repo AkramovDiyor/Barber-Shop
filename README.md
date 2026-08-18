@@ -1,299 +1,186 @@
-# Barber Shop Full-Stack Application
+# Barbershop - Полноценное веб-приложение для барбершопа
 
-## Overview
+## 🚀 Описание
 
-This is a complete full-stack web application for a barbershop, featuring:
-- **Client-facing website** with services catalog, barber profiles, and online booking
-- **Customer portal** for managing appointments
-- **Admin dashboard** for business management
-- **Barber interface** for schedule management
-- **REST API** with JWT authentication
+Современное full-stack приложение для барбершопа с онлайн-записью, личным кабинетом клиента и административной панелью.
 
-## Tech Stack
+### Стек технологий:
+- **Frontend**: React 18 + Vite + React Router
+- **Backend**: Node.js + Express
+- **Хранение данных**: In-memory (для демонстрации, легко заменяется на PostgreSQL)
+- **Аутентификация**: JWT токены
+- **Стили**: CSS3 с переменными
 
-### Backend
-- **Node.js** + **Express.js** - Server framework
-- **PostgreSQL** - Database
-- **JWT** - Authentication
-- **bcryptjs** - Password hashing
-- **express-validator** - Input validation
+## 📋 Функциональность
 
-### Frontend (Original)
-- HTML5, CSS3, JavaScript
-- Responsive design (mobile-first)
+### Клиентская часть:
+- ✅ Главная страница с hero-блоком, услугами, барберами, отзывами
+- ✅ Онлайн-запись в 4 шага (услуга → барбер → дата/время → подтверждение)
+- ✅ Проверка доступности времени барбера
+- ✅ Личный кабинет с историей записей
+- ✅ Регистрация и вход
+- ✅ Профили барберов с расписанием и отзывами
+- ✅ Адаптивная верстка (mobile-first)
 
-## Project Structure
+### Административная панель:
+- ✅ Дашборд со статистикой (записи, выручка, загрузка барберов)
+- ✅ Управление записями (просмотр, подтверждение, отмена)
+- ✅ Экспорт данных в CSV
+- ✅ Статистика по барберам и услугам
+- ✅ Ролевая модель (admin, client, barber)
 
-```
-/workspace
-├── backend/                 # Backend API
-│   ├── src/
-│   │   ├── config/         # Database configuration
-│   │   ├── controllers/    # Route controllers
-│   │   ├── middleware/     # Auth & validation middleware
-│   │   ├── models/         # Data models (User, Service, Barber, Appointment, Review)
-│   │   ├── routes/         # API routes
-│   │   └── server.js       # Express server entry point
-│   ├── .env                # Environment variables
-│   └── package.json
-├── frontend/               # Frontend (to be developed)
-├── img/                    # Images
-├── index.html             # Main landing page
-└── style.css              # Styles
-```
+## 🛠 Установка и запуск
 
-## API Endpoints
+### Требования:
+- Node.js >= 16.x
+- npm или yarn
 
-### Authentication (`/api/auth`)
-- `POST /register` - Register new client
-- `POST /login` - Login user
-- `GET /me` - Get current user profile
-- `PUT /profile` - Update user profile
-
-### Services (`/api/services`)
-- `GET /` - Get all services (public)
-- `GET /:id` - Get service by ID
-- `POST /` - Create service (admin)
-- `PUT /:id` - Update service (admin)
-- `DELETE /:id` - Delete service (admin)
-
-### Barbers (`/api/barbers`)
-- `GET /` - Get all barbers (public)
-- `GET /:id` - Get barber by ID with schedule
-- `GET /:id/schedule` - Get barber schedule
-- `PUT /:id/schedule` - Update schedule (admin/barber)
-- `GET /:id/availability` - Check availability
-- `POST /` - Create barber (admin)
-- `PUT /:id` - Update barber (admin)
-- `DELETE /:id` - Delete barber (admin)
-
-### Appointments (`/api/appointments`)
-- `POST /` - Book appointment (client)
-- `GET /my` - Get client's appointments
-- `GET /barber` - Get barber's appointments
-- `GET /:id` - Get appointment details
-- `PUT /:id/status` - Update status (admin/barber)
-- `PUT /:id/cancel` - Cancel appointment (client)
-- `PUT /:id/reschedule` - Reschedule (admin/barber)
-
-### Reviews (`/api/reviews`)
-- `POST /` - Create review (client, after completed appointment)
-- `GET /barber/:barberId` - Get barber's approved reviews (public)
-- `GET /` - Get all reviews (admin)
-- `PUT /:id/approve` - Approve/reject review (admin)
-- `DELETE /:id` - Delete review (admin)
-
-### Admin (`/api/admin`)
-- `GET /dashboard` - Dashboard statistics
-- `GET /appointments` - All appointments with filters
-- `GET /users` - All users
-- `PUT /users/:id/status` - Block/unblock user
-- `GET /export/appointments` - Export to CSV
-
-## Setup Instructions
-
-### Prerequisites
-- Node.js (v14 or higher)
-- PostgreSQL (v12 or higher)
-- npm or yarn
-
-### 1. Database Setup
-
+### 1. Клонирование репозитория
 ```bash
-# Create database
-createdb barbershop
-
-# Run schema
-psql -U postgres -d barbershop -f backend/src/config/schema.sql
+cd /workspace
 ```
 
-Or using the npm script:
+### 2. Установка зависимостей бэкенда
 ```bash
 cd backend
-npm run db:init
-```
-
-### 2. Backend Setup
-
-```bash
-cd backend
-
-# Install dependencies
 npm install
+```
 
-# Configure environment variables
-cp .env.example .env
-# Edit .env with your database credentials and other settings
-
-# Start development server
+### 3. Запуск бэкенда
+```bash
+# В режиме разработки
 npm run dev
 
-# Or start production server
+# Или в production режиме
 npm start
 ```
 
-### 3. Environment Variables
+Бэкенд запустится на `http://localhost:5000`
 
-Edit `backend/.env`:
+### 4. Установка зависимостей фронтенда (в новом терминале)
+```bash
+cd frontend
+npm install
+```
 
+### 5. Запуск фронтенда
+```bash
+npm run dev
+```
+
+Фронтенд запустится на `http://localhost:3000`
+
+## 🔐 Тестовые учетные записи
+
+| Роль | Email | Пароль |
+|------|-------|--------|
+| Администратор | admin@barbershop.com | admin123 |
+| Клиент | user@example.com | user123 |
+
+## 📁 Структура проекта
+
+```
+/workspace
+├── backend/
+│   ├── src/
+│   │   ├── data/           # In-memory хранилище
+│   │   ├── middleware/     # Auth middleware
+│   │   ├── routes/         # API маршруты
+│   │   └── server.js       # Точка входа
+│   ├── .env                # Переменные окружения
+│   └── package.json
+│
+└── frontend/
+    ├── src/
+    │   ├── components/     # UI компоненты
+    │   ├── context/        # React Context (Auth)
+    │   ├── pages/          # Страницы приложения
+    │   ├── services/       # API сервисы
+    │   ├── App.jsx         # Главный компонент
+    │   ├── main.jsx        # Точка входа
+    │   └── index.css       # Глобальные стили
+    ├── index.html
+    ├── vite.config.js
+    └── package.json
+```
+
+## 🌐 API Endpoints
+
+### Аутентификация
+- `POST /api/auth/register` - Регистрация
+- `POST /api/auth/login` - Вход
+- `GET /api/auth/me` - Получить текущий профиль
+- `PUT /api/auth/me` - Обновить профиль
+
+### Услуги
+- `GET /api/services` - Список услуг
+- `GET /api/services/:id` - Детали услуги
+- `POST /api/services` - Создать услугу (admin)
+- `PUT /api/services/:id` - Обновить услугу (admin)
+- `DELETE /api/services/:id` - Удалить услугу (admin)
+
+### Барберы
+- `GET /api/barbers` - Список барберов
+- `GET /api/barbers/:id` - Профиль барбера с отзывами
+- `POST /api/barbers` - Создать барбера (admin)
+- `PUT /api/barbers/:id` - Обновить барбера (admin)
+- `DELETE /api/barbers/:id` - Удалить барбера (admin)
+
+### Записи
+- `GET /api/appointments` - Все записи (admin)
+- `GET /api/appointments/my` - Мои записи (client)
+- `POST /api/appointments/check-availability` - Проверить доступность
+- `POST /api/appointments` - Создать запись
+- `PATCH /api/appointments/:id/status` - Изменить статус (admin)
+- `DELETE /api/appointments/:id` - Отменить запись
+
+### Отзывы
+- `GET /api/reviews` - Список отзывов
+- `GET /api/reviews/barber/:barberId` - Отзывы о барбере
+- `POST /api/reviews` - Создать отзыв
+- `PATCH /api/reviews/:id/status` - Модерация отзыва (admin)
+- `DELETE /api/reviews/:id` - Удалить отзыв (admin)
+
+### Админка
+- `GET /api/admin/dashboard` - Статистика дашборда
+- `GET /api/admin/export/appointments` - Экспорт записей (CSV)
+- `GET /api/admin/export/users` - Экспорт пользователей (CSV)
+- `GET /api/admin/users` - Список пользователей (admin)
+- `PATCH /api/admin/users/:id` - Обновить пользователя (admin)
+
+## 🔧 Конфигурация
+
+### Переменные окружения (backend/.env)
 ```env
-# Database
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=barbershop
-DB_USER=postgres
-DB_PASSWORD=your_password
-
-# JWT
-JWT_SECRET=your_secret_key_change_in_production
-JWT_EXPIRE=7d
-
-# Server
 PORT=5000
-FRONTEND_URL=http://localhost:3000
-
-# Optional: Email notifications
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASSWORD=your_app_password
-
-# Optional: Telegram notifications
-TELEGRAM_BOT_TOKEN=your_bot_token
-TELEGRAM_CHAT_ID=your_chat_id
+JWT_SECRET=your-secret-key-change-in-production
+NODE_ENV=development
 ```
 
-### 4. Default Admin Account
+## 📝 Примечания
 
-After running the schema, you can login with:
-- **Email:** admin@barbershop.com
-- **Password:** admin123
+1. **Хранение данных**: В текущей версии используется in-memory хранилище. Данные сбрасываются при перезапуске сервера. Для production рекомендуется подключить PostgreSQL.
 
-**⚠️ Change this password immediately in production!**
+2. **Миграция на PostgreSQL**: Для подключения базы данных:
+   - Установите пакет: `npm install pg pg-hstore`
+   - Создайте файл подключения к БД
+   - Замените методы store.js на SQL запросы
 
-## User Roles
+3. **Уведомления**: Для отправки email/Telegram уведомлений можно добавить интеграцию с nodemailer или Telegram Bot API.
 
-### Client
-- Browse services and barbers
-- Book appointments
-- View appointment history
-- Cancel/reschedule appointments
-- Leave reviews after completed visits
+4. **Безопасность**: 
+   - Пароли хешируются с bcrypt
+   - JWT токены используются для аутентификации
+   - Валидация данных на сервере
+   - Защита от CORS настроена
 
-### Barber
-- View own schedule
-- See upcoming appointments
-- Update appointment status
-- Manage own working hours
+## 🎨 Дизайн
 
-### Admin
-- Full access to all features
-- Manage services, barbers, users
-- View dashboard analytics
-- Moderate reviews
-- Export data
+Приложение использует современную цветовую схему:
+- Основной цвет: #c9a55c (золотой)
+- Вторичный цвет: #1a1a1a (темный)
+- Адаптивная верстка для мобильных устройств
 
-## Security Features
+## 📄 Лицензия
 
-- ✅ JWT-based authentication
-- ✅ Password hashing with bcrypt
-- ✅ Role-based authorization
-- ✅ Input validation on server side
-- ✅ SQL injection prevention (parameterized queries)
-- ✅ CORS configuration
-- ✅ XSS protection headers
-
-## Testing
-
-Test the API with these sample requests:
-
-```bash
-# Health check
-curl http://localhost:5000/api/health
-
-# Get services
-curl http://localhost:5000/api/services
-
-# Get barbers
-curl http://localhost:5000/api/barbers
-
-# Register new user
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"test123","full_name":"Test User","phone":"+1234567890"}'
-
-# Login
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"test123"}'
-```
-
-## Docker Deployment (Optional)
-
-Create `docker-compose.yml`:
-
-```yaml
-version: '3.8'
-services:
-  postgres:
-    image: postgres:14
-    environment:
-      POSTGRES_DB: barbershop
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./backend/src/config/schema.sql:/docker-entrypoint-initdb.d/schema.sql
-    ports:
-      - "5432:5432"
-  
-  api:
-    build: ./backend
-    environment:
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: barbershop
-      DB_USER: postgres
-      DB_PASSWORD: postgres
-    ports:
-      - "5000:5000"
-    depends_on:
-      - postgres
-
-volumes:
-  pgdata:
-```
-
-Run with:
-```bash
-docker-compose up -d
-```
-
-## Next Steps
-
-To complete the full-stack application:
-
-1. **Frontend Development** (React/Next.js recommended):
-   - Landing page integration
-   - Booking flow UI
-   - Customer dashboard
-   - Admin panel
-
-2. **Notifications**:
-   - Email confirmation setup
-   - Telegram bot integration
-   - SMS reminders
-
-3. **Additional Features**:
-   - Payment integration
-   - Multi-location support
-   - Advanced analytics
-   - Mobile app
-
-## License
-
-MIT
-
-## Support
-
-For issues or questions, please open an issue in the repository.
+MIT License

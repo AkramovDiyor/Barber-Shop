@@ -1,154 +1,143 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { appointmentService } from '../services';
 
 const Profile = () => {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user, updateUser, logout } = useAuth();
   const [appointments, setAppointments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  const [formData, setFormData] = useState({ name: '', phone: '' });
 
   useEffect(() => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
-    loadAppointments();
-  }, [user]);
+    setFormData({ name: user?.name || '', phone: user?.phone || '' });
+    fetchAppointments();
+  }, []);
 
-  const loadAppointments = async () => {
+  const fetchAppointments = async () => {
     try {
-      setLoading(true);
-      const response = await appointmentService.getMyAppointments(
-        filter === 'all' ? null : filter
-      );
-      if (response.success) {
-        setAppointments(response.data.appointments);
-      }
-    } catch (err) {
-      setError('Failed to load appointments');
+      const response = await api.get('/appointments/my');
+      setAppointments(response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCancel = async (id) => {
-    if (!window.confirm('Are you sure you want to cancel this appointment?')) {
-      return;
-    }
-
+  const handleUpdateProfile = async () => {
     try {
-      const response = await appointmentService.cancel(id, 'Cancelled by client');
-      if (response.success) {
-        loadAppointments();
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to cancel appointment');
+      const response = await api.put('/auth/me', formData);
+      updateUser(response.data);
+      setEditMode(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
     }
   };
 
-  const getStatusBadgeClass = (status) => {
-    return `status-badge ${status}`;
+  const handleCancelAppointment = async (id) => {
+    if (!confirm('Вы уверены, что хотите отменить запись?')) return;
+    
+    try {
+      await api.delete(`/appointments/${id}`);
+      fetchAppointments();
+    } catch (error) {
+      console.error('Error cancelling appointment:', error);
+    }
   };
 
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+  const filteredAppointments = appointments.filter(apt => {
+    if (filter === 'upcoming') return ['pending', 'confirmed'].includes(apt.status);
+    if (filter === 'past') return ['completed', 'cancelled'].includes(apt.status);
+    return true;
+  });
+
+  const getStatusBadge = (status) => {
+    const statusMap = {
+      pending: { text: 'Ожидает', class: 'status-pending' },
+      confirmed: { text: 'Подтверждено', class: 'status-confirmed' },
+      completed: { text: 'Завершено', class: 'status-completed' },
+      cancelled: { text: 'Отменено', class: 'status-cancelled' }
+    };
+    const s = statusMap[status] || { text: status, class: '' };
+    return <span className={`status-badge ${s.class}`}>{s.text}</span>;
   };
 
-  if (!user) {
-    return null;
-  }
+  if (loading) return <div className="loading">Загрузка...</div>;
 
   return (
-    <div className="profile-container">
-      <div className="profile-content">
-        <div className="profile-header">
-          <h1>My Profile</h1>
-          <p><strong>Name:</strong> {user.full_name}</p>
-          <p><strong>Email:</strong> {user.email}</p>
-          {user.phone && <p><strong>Phone:</strong> {user.phone}</p>}
-          <p><strong>Role:</strong> {user.role}</p>
-          <button className="btn-secondary" onClick={logout} style={{ marginTop: '15px' }}>
-            Logout
-          </button>
-        </div>
-
-        <div className="profile-section">
-          <h2>My Appointments</h2>
-          
-          {error && <div className="error-message">{error}</div>}
-          
-          <div style={{ marginBottom: '20px' }}>
-            <button 
-              className={`btn-small ${filter === 'all' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => { setFilter('all'); loadAppointments(); }}
-              style={{ marginRight: '10px' }}
-            >
-              All
-            </button>
-            <button 
-              className={`btn-small ${filter === 'pending' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => { setFilter('pending'); loadAppointments(); }}
-              style={{ marginRight: '10px' }}
-            >
-              Pending
-            </button>
-            <button 
-              className={`btn-small ${filter === 'confirmed' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => { setFilter('confirmed'); loadAppointments(); }}
-              style={{ marginRight: '10px' }}
-            >
-              Confirmed
-            </button>
-            <button 
-              className={`btn-small ${filter === 'completed' ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => { setFilter('completed'); loadAppointments(); }}
-            >
-              Completed
-            </button>
+    <div className="profile-page">
+      <div className="container">
+        <h2>Личный кабинет</h2>
+        
+        <div className="profile-grid">
+          <div className="profile-card">
+            <h3>Мой профиль</h3>
+            {editMode ? (
+              <div className="edit-form">
+                <div className="form-group">
+                  <label>Имя</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Телефон</label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
+                </div>
+                <div className="form-actions">
+                  <button className="btn btn-primary" onClick={handleUpdateProfile}>Сохранить</button>
+                  <button className="btn btn-outline" onClick={() => setEditMode(false)}>Отмена</button>
+                </div>
+              </div>
+            ) : (
+              <div className="profile-info">
+                <p><strong>Имя:</strong> {user?.name}</p>
+                <p><strong>Email:</strong> {user?.email}</p>
+                <p><strong>Телефон:</strong> {user?.phone || 'Не указан'}</p>
+                <button className="btn btn-outline" onClick={() => setEditMode(true)}>Редактировать</button>
+              </div>
+            )}
           </div>
 
-          {loading ? (
-            <div className="loading">
-              <div className="spinner"></div>
+          <div className="appointments-card">
+            <h3>Мои записи</h3>
+            <div className="filter-tabs">
+              <button className={filter === 'all' ? 'active' : ''} onClick={() => setFilter('all')}>Все</button>
+              <button className={filter === 'upcoming' ? 'active' : ''} onClick={() => setFilter('upcoming')}>Предстоящие</button>
+              <button className={filter === 'past' ? 'active' : ''} onClick={() => setFilter('past')}>Прошедшие</button>
             </div>
-          ) : appointments.length > 0 ? (
-            appointments.map(apt => (
-              <div key={apt.id} className={`appointment-card ${apt.status}`}>
-                <div className="appointment-header">
-                  <h3>{apt.service_name}</h3>
-                  <span className={getStatusBadgeClass(apt.status)}>
-                    {apt.status}
-                  </span>
-                </div>
-                <p><strong>Barber:</strong> {apt.barber_name}</p>
-                <p><strong>Date:</strong> {formatDate(apt.appointment_date)}</p>
-                <p><strong>Time:</strong> {apt.start_time}</p>
-                <p><strong>Price:</strong> ${apt.total_price}</p>
-                {apt.notes && <p><strong>Notes:</strong> {apt.notes}</p>}
-                
-                {apt.status === 'pending' && (
-                  <button 
-                    className="btn-small btn-danger"
-                    onClick={() => handleCancel(apt.id)}
-                    style={{ marginTop: '10px' }}
-                  >
-                    Cancel Appointment
-                  </button>
-                )}
+
+            {filteredAppointments.length === 0 ? (
+              <p className="no-appointments">У вас пока нет записей</p>
+            ) : (
+              <div className="appointments-list">
+                {filteredAppointments.map(apt => (
+                  <div key={apt.id} className="appointment-item">
+                    <div className="apt-details">
+                      <div className="apt-date">{apt.date} в {apt.time}</div>
+                      <div className="apt-service">Услуга ID: {apt.serviceId}</div>
+                      <div className="apt-barber">Барбер ID: {apt.barberId}</div>
+                      <div className="apt-price">{apt.price} ₽</div>
+                    </div>
+                    <div className="apt-status">{getStatusBadge(apt.status)}</div>
+                    {['pending', 'confirmed'].includes(apt.status) && (
+                      <button className="btn btn-small btn-danger" onClick={() => handleCancelAppointment(apt.id)}>
+                        Отменить
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))
-          ) : (
-            <p>No appointments found.</p>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

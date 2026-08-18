@@ -1,198 +1,117 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { body } = require('express-validator');
+const { JWT_SECRET } = require('../middleware/auth');
+const store = require('../data/store');
+
 const router = express.Router();
-const userService = require('../models/User');
-const barberService = require('../models/Barber');
-const validateRequest = require('../middleware/validator');
-const { authMiddleware, authorize } = require('../middleware/auth');
 
-require('dotenv').config();
-
-// @route   POST /api/auth/register
-// @desc    Register a new client user
-// @access  Public
-router.post('/register', [
-  body('email').isEmail().withMessage('Please provide a valid email'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-  body('full_name').notEmpty().withMessage('Full name is required'),
-  body('phone').optional().isMobilePhone().withMessage('Please provide a valid phone number'),
-  validateRequest
-], async (req, res) => {
+// Register
+router.post('/register', async (req, res) => {
   try {
-    const { email, password, full_name, phone } = req.body;
+    const { email, password, name, phone } = req.body;
 
-    // Check if user already exists
-    const existingUser = await userService.findByEmail(email);
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: 'User with this email already exists'
-      });
+    // Validation
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: 'Email, password and name are required' });
     }
 
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    const password_hash = await bcrypt.hash(password, salt);
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
 
-    // Create user
-    const user = await userService.createUser({
+    const passwordHash = await bcrypt.hash(password, 10);
+    
+    const user = store.createUser({
       email,
-      password_hash,
-      full_name,
-      phone,
+      password: passwordHash,
+      name,
+      phone: phone || '',
       role: 'client'
     });
 
-    // Generate JWT token
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '7d' }
+      JWT_SECRET,
+      { expiresIn: '7d' }
     );
 
     res.status(201).json({
-      success: true,
-      message: 'User registered successfully',
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name,
-          phone: user.phone,
-          role: user.role
-        },
-        token
-      }
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      token
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error during registration'
-    });
+    if (error.message === 'User with this email already exists') {
+      return res.status(400).json({ error: error.message });
+    }
+    res.status(500).json({ error: 'Server error during registration' });
   }
 });
 
-// @route   POST /api/auth/login
-// @desc    Login user
-// @access  Public
-router.post('/login', [
-  body('email').isEmail().withMessage('Please provide a valid email'),
-  body('password').notEmpty().withMessage('Password is required'),
-  validateRequest
-], async (req, res) => {
+// Login
+router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user
-    const user = await userService.findByEmail(email);
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const user = store.getUserByEmail(email);
     if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Check if user is active
-    if (!user.is_active) {
-      return res.status(403).json({
-        success: false,
-        message: 'Your account has been blocked. Please contact support.'
-      });
-    }
-
-    // Verify password
-    const isMatch = await bcrypt.compare(password, user.password_hash);
+    const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid credentials'
-      });
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate JWT token
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE || '7d' }
+      JWT_SECRET,
+      { expiresIn: '7d' }
     );
 
     res.json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          full_name: user.full_name,
-          phone: user.phone,
-          role: user.role
-        },
-        token
-      }
+      user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      token
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error during login'
-    });
+    res.status(500).json({ error: 'Server error during login' });
   }
 });
 
-// @route   GET /api/auth/me
-// @desc    Get current logged in user
-// @access  Private
-router.get('/me', authMiddleware, async (req, res) => {
+// Get current user profile
+router.get('/me', require('../middleware/auth').authMiddleware, (req, res) => {
   try {
-    const user = await userService.findById(req.user.id);
-    
+    const user = store.getUserById(req.user.id);
     if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
+      return res.status(404).json({ error: 'User not found' });
     }
-
-    res.json({
-      success: true,
-      data: { user }
-    });
+    res.json(user);
   } catch (error) {
-    console.error('Get user error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-// @route   PUT /api/auth/profile
-// @desc    Update user profile
-// @access  Private
-router.put('/profile', authMiddleware, [
-  body('full_name').optional().notEmpty().withMessage('Full name cannot be empty'),
-  body('phone').optional().isMobilePhone().withMessage('Please provide a valid phone number'),
-  validateRequest
-], async (req, res) => {
+// Update profile
+router.put('/me', require('../middleware/auth').authMiddleware, async (req, res) => {
   try {
-    const { full_name, phone } = req.body;
+    const { name, phone } = req.body;
+    const updates = {};
     
-    const user = await userService.updateUser(req.user.id, { full_name, phone });
-    
-    res.json({
-      success: true,
-      message: 'Profile updated successfully',
-      data: { user }
-    });
+    if (name) updates.name = name;
+    if (phone !== undefined) updates.phone = phone;
+
+    const user = store.updateUser(req.user.id, updates);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(user);
   } catch (error) {
-    console.error('Update profile error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Server error'
-    });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
